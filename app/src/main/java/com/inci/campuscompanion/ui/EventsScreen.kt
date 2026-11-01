@@ -33,19 +33,23 @@ import com.inci.campuscompanion.ui.theme.CampusCompanionTheme
 fun EventsScreen(
     state: EventsUiState,
     onRefresh: () -> Unit,
+    onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.fillMaxSize()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(horizontal = 8.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            TextButton(onClick = onBack) {
+                Text("Back")
+            }
             Text(
                 text = "Campus Events",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.weight(1f)
             )
             TextButton(
                 onClick = onRefresh,
@@ -165,7 +169,8 @@ fun EventsPreview() {
                     CampusEvent("2", "Event 2", "2026-10-21 09:00", "Lab B204", "Description 2")
                 )
             ),
-            onRefresh = {}
+            onRefresh = {},
+            onBack = {}
         )
     }
 }
@@ -176,7 +181,8 @@ fun EventsErrorPreview() {
     CampusCompanionTheme(darkTheme = false) {
         EventsScreen(
             state = EventsUiState.Error("Unable to resolve host"),
-            onRefresh = {}
+            onRefresh = {},
+            onBack = {}
         )
     }
 }

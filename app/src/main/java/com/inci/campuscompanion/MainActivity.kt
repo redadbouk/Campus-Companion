@@ -18,16 +18,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Event
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -35,10 +32,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,9 +48,9 @@ import com.inci.campuscompanion.data.UserPreferencesRepository
 import com.inci.campuscompanion.data.dataStore
 import com.inci.campuscompanion.data.remote.CampusApi
 import com.inci.campuscompanion.model.Task
-import com.inci.campuscompanion.ui.EventsScreen
 import com.inci.campuscompanion.ui.EventsViewModel
 import com.inci.campuscompanion.ui.MainViewModel
+import com.inci.campuscompanion.ui.navigation.CampusNavHost
 import com.inci.campuscompanion.ui.theme.CampusCompanionTheme
 
 class MainActivity : ComponentActivity() {
@@ -78,46 +73,14 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val isDarkMode by viewModel.isDarkMode.collectAsStateWithLifecycle()
-            val tasks by viewModel.tasks.collectAsStateWithLifecycle()
-            val eventsState by eventsViewModel.uiState.collectAsStateWithLifecycle()
-            var selectedTab by rememberSaveable { mutableIntStateOf(0) }
 
             CampusCompanionTheme(darkTheme = isDarkMode) {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    bottomBar = {
-                        NavigationBar {
-                            NavigationBarItem(
-                                selected = selectedTab == 0,
-                                onClick = { selectedTab = 0 },
-                                icon = { Icon(Icons.Default.CheckCircle, contentDescription = null) },
-                                label = { Text("Tasks") }
-                            )
-                            NavigationBarItem(
-                                selected = selectedTab == 1,
-                                onClick = { selectedTab = 1 },
-                                icon = { Icon(Icons.Default.Event, contentDescription = null) },
-                                label = { Text("Events") }
-                            )
-                        }
-                    }
-                ) { innerPadding ->
-                    if (selectedTab == 0) {
-                        TaskScreen(
-                            isDarkMode = isDarkMode,
-                            onToggleDarkMode = { viewModel.toggleDarkMode(it) },
-                            tasks = tasks,
-                            onToggleTask = { viewModel.toggleTaskCompletion(it) },
-                            onAddTask = { title, description -> viewModel.upsertTask(title, description) },
-                            modifier = Modifier.padding(innerPadding)
-                        )
-                    } else {
-                        EventsScreen(
-                            state = eventsState,
-                            onRefresh = { eventsViewModel.loadEvents() },
-                            modifier = Modifier.padding(innerPadding)
-                        )
-                    }
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    CampusNavHost(
+                        mainViewModel = viewModel,
+                        eventsViewModel = eventsViewModel,
+                        modifier = Modifier.padding(innerPadding)
+                    )
                 }
             }
         }
@@ -131,6 +94,7 @@ fun TaskScreen(
     tasks: List<Task>,
     onToggleTask: (Task) -> Unit,
     onAddTask: (String, String) -> Unit,
+    onOpenEvents: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
@@ -155,6 +119,15 @@ fun TaskScreen(
             }
 
             HorizontalDivider()
+
+            OutlinedButton(
+                onClick = onOpenEvents,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text("Campus Events")
+            }
 
             if (tasks.isEmpty()) {
                 Box(
@@ -313,7 +286,8 @@ fun TaskPreview() {
                 Task(2, "Task 2", "Description 2", true)
             ),
             onToggleTask = {},
-            onAddTask = { _, _ -> }
+            onAddTask = { _, _ -> },
+            onOpenEvents = {}
         )
     }
 }
